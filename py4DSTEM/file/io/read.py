@@ -103,7 +103,7 @@ def read(filename, load=None):
             output = read_kitware_counted(filename)
         elif load == 'kitware_counted_mmap':
             print('Memory-mapping a Kitware electron counted dataset.')
-            output = read_kitware_counted_mmap(filename)
+            output = read_kitware_counted_mmap(filename,Q_Nx = 576, Q_Ny = 576)
         else:
             raise ValueError("Unknown value for parameter 'load' = {}. See the read docstring for more info.".format(load))
 
@@ -255,7 +255,7 @@ def read_kitware_counted(filename):
 
     return CountedDataCube(pla,[Q_Nx,Q_Ny],'ind',use_dask=False)
 
-def read_kitware_counted_mmap(filename):
+def read_kitware_counted_mmap(filename,Q_Nx = None, Q_Ny = None):
     """
     Read a Kitware counted dataset (i.e. from the NCEM 4D camera)
     (Not for py4DSTEM formatted files, which may be suported by 
@@ -266,8 +266,10 @@ def read_kitware_counted_mmap(filename):
     R_Nx = hfile['electron_events']['scan_positions'].attrs['Ny']
     R_Ny = hfile['electron_events']['scan_positions'].attrs['Nx']
 
-    Q_Nx = hfile['electron_events']['frames'].attrs['Nx']
-    Q_Ny = hfile['electron_events']['frames'].attrs['Ny']
+    if Q_Nx is None:
+        Q_Nx = hfile['electron_events']['frames'].attrs['Nx']
+    if Q_Ny is None:
+        Q_Ny = hfile['electron_events']['frames'].attrs['Ny']
 
     return CountedDataCube(hfile['electron_events']['frames'],[Q_Nx,Q_Ny],[None],
         use_dask=False,R_Nx=R_Nx,R_Ny=R_Ny)
