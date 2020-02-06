@@ -313,6 +313,20 @@ class CountedDataCube(DataObject):
         self.electrons = new_electrons
         self.data.electrons = new_electrons
 
+    def roll_data_diffraction(self, shift):
+        """Similar to the np.roll function but for sparse electron data"""
+
+        # Initialize new electron data point lists
+        new_electrons = []
+
+        for frame in tqdm.tqdm(range(len(self.electrons)),'Shifting'):
+            newYcoord = ((self.electrons[frame]//self.detector_shape[1]) + shift[0])%self.detector_shape[1]
+            newXcoord = (np.mod(self.electrons[frame],self.detector_shape[1]) + shift[1])%self.detecotr_shape[0]
+            new_electrons.append(newYcoord*self.detector_shape[1] + newXcoord )
+            
+        self.electrons = new_electrons
+        self.data.electrons = new_electrons
+
     def bin_data_real(self, bin_factor):
         # bin the underlying data (keeping sparse storage)
         raise NotImplementedError("Binning only supported by densify().")
