@@ -9,6 +9,7 @@ from tempfile import TemporaryFile
 import numpy as np
 import numba as nb
 import h5py
+import tqdm
 
 import numpy as np
 from .dataobject import DataObject
@@ -271,20 +272,46 @@ class CountedDataCube(DataObject):
 
     def bin_data_diffraction(self, bin_factor):
         '''bin the underlying data (keeping in sparse storage)'''
-        
+        # Parrallelization is not yet implemented for this routine but should be 
+        # straight-forward
+
+        if np.isscalar(bin_factor):
+            bin_ = [bin_factor,bin_factor]
+        else:
+            bin_ = bin_factor
+
         # Initialize new electron data point lists
         new_electrons = []
 
         # Calculate new detector shape for binned dataset
-        newshape = [self.detector_shape[i]//bin_factor[i] for i in range(2)]
+        newshape = [self.detector_shape[i]//bin_[i] for i in range(2)]
 
-        for frame in tqdm.tqdm(range(self.electrons),'Binning'):
-            newYcoord = (self.electrons[frame]//self.detector_shape[1])//bin_factor[0]
-            newXcoord = np.mod(self.electrons[frame],self.detector_shape[1])//(bin_factor[1])
+        for frame in tqdm.tqdm(range(len(self.electrons)),'Binning'):
+            newYcoord = (self.electrons[frame]//self.detector_shape[1])//bin_[0]
+            newXcoord = np.mod(self.electrons[frame],self.detector_shape[1])//(bin_[1])
             new_electrons.append(newYcoord*newshape[1] + newXcoord )
             
-        self.electrons = self.new_electrons
+        self.electrons = new_electrons
+        self.data.electrons = new_electrons
+        self.data.detector_shape = newshape
         self.detector_shape = newshape
+
+    def shift_data_diffraction(self, shift):
+        """Shift the underlying data in diffraction space"""
+
+        # Initialize new electron data point lists
+        new_electrons = []
+
+        for frame in tqdm.tqdm(range(len(self.electrons)),'Shifting'):
+            newYcoord = (self.electrons[frame]//self.detector_shape[1]) + shift[0]
+            maskY = newYcoord < self.detector_shape[0]
+            newXcoord = np.mod(self.electrons[frame],self.detector_shape[1]) + shift[1]
+            maskX = newXcoord < self.detector_shape[1]
+            mask = np.logical_and(maskY,maskX)
+            new_electrons.append((newYcoord*self.detector_shape[1] + newXcoord)[mask] )
+            
+        self.electrons = new_electrons
+        self.data.electrons = new_electrons
 
     def bin_data_real(self, bin_factor):
         # bin the underlying data (keeping sparse storage)
