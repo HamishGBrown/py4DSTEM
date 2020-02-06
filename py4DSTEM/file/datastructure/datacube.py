@@ -270,8 +270,21 @@ class CountedDataCube(DataObject):
         self.R_N = self.R_Nx * self.R_Ny
 
     def bin_data_diffraction(self, bin_factor):
-        # bin the underlying data (keeping in sparse storage)
-        raise NotImplementedError("Binning only supported by densify().")
+        '''bin the underlying data (keeping in sparse storage)'''
+        
+        # Initialize new electron data point lists
+        new_electrons = []
+
+        # Calculate new detector shape for binned dataset
+        newshape = [self.detector_shape[i]//bin_factor[i] for i in range(2)]
+
+        for frame in tqdm.tqdm(range(self.electrons),'Binning'):
+            newYcoord = (self.electrons[frame]//self.detector_shape[1])//bin_factor[0]
+            newXcoord = np.mod(self.electrons[frame],self.detector_shape[1])//(bin_factor[1])
+            new_electrons.append(newYcoord*newshape[1] + newXcoord )
+            
+        self.electrons = self.new_electrons
+        self.detector_shape = newshape
 
     def bin_data_real(self, bin_factor):
         # bin the underlying data (keeping sparse storage)
