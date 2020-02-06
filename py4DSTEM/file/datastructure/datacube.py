@@ -321,7 +321,7 @@ class CountedDataCube(DataObject):
 
         for frame in tqdm.tqdm(range(len(self.electrons)),'Shifting'):
             newYcoord = ((self.electrons[frame]//self.detector_shape[1]) + shift[0])%self.detector_shape[1]
-            newXcoord = (np.mod(self.electrons[frame],self.detector_shape[1]) + shift[1])%self.detecotr_shape[0]
+            newXcoord = (np.mod(self.electrons[frame],self.detector_shape[1]) + shift[1])%self.detector_shape[0]
             new_electrons.append(newYcoord*self.detector_shape[1] + newXcoord )
             
         self.electrons = new_electrons
