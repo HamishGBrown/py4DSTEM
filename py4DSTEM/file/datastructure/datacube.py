@@ -294,6 +294,7 @@ class CountedDataCube(DataObject):
         self.electrons = new_electrons
         self.data.electrons = new_electrons
         self.data.detector_shape = newshape
+        self.Q_Nx,self.Q_Ny = newshape
         self.detector_shape = newshape
 
     def shift_data_diffraction(self, shift):
@@ -308,7 +309,7 @@ class CountedDataCube(DataObject):
             newXcoord = np.mod(self.electrons[frame],self.detector_shape[1]) + shift[1]
             maskX = newXcoord < self.detector_shape[1]
             mask = np.logical_and(maskY,maskX)
-            new_electrons.append((newYcoord*self.detector_shape[1] + newXcoord)[mask] )
+            new_electrons.append(newYcoord[mask]*self.detector_shape[1] + newXcoord[mask] )
             
         self.electrons = new_electrons
         self.data.electrons = new_electrons
