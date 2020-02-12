@@ -279,6 +279,26 @@ class CountedDataCube(DataObject):
 
         self.R_N = self.R_Nx * self.R_Ny
 
+    def flip_Q(self,axis):
+        """Flip the diffraction patterns in one of the axes"""
+        
+        # Initialize new electron data point lists
+        new_electrons = []
+
+        for frame in tqdm.tqdm(range(len(self.electrons)), "Flipping"):
+            newYcoord = (self.electrons[frame] // self.detector_shape[1])
+            if axis == 0 : 
+                newYcoord = self.Q_Ny  - newYcoord
+            
+            newXcoord = np.mod(self.electrons[frame], self.detector_shape[1])
+
+            if axis == 1 :
+                newXcoord = self.Q_Nx - newXcoord
+            
+            new_electrons.append(newYcoord * self.detector_shape[1] + newXcoord)
+        self.electrons = new_electrons
+        self.data.electrons = new_electrons
+
     def bin_data_diffraction(self, bin_factor):
         """bin the underlying data (keeping in sparse storage)"""
         # Parrallelization is not yet implemented for this routine but should be
