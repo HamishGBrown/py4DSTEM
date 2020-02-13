@@ -316,10 +316,10 @@ class CountedDataCube(DataObject):
         newshape = [self.detector_shape[i] // bin_[i] for i in range(2)]
 
         for frame in tqdm.tqdm(range(len(self.electrons)), "Binning"):
-            newYcoord = (self.electrons[frame] // self.detector_shape[1]) // bin_[0]
-            newXcoord = np.mod(self.electrons[frame], self.detector_shape[1]) // (
+            newYcoord = np.clip((self.electrons[frame] // self.detector_shape[1]) // bin_[0],0,newshape[0])
+            newXcoord = np.clip(np.mod(self.electrons[frame], self.detector_shape[1]) // (
                 bin_[1]
-            )
+            ),0,newshape[1])
             new_electrons.append(newYcoord * newshape[1] + newXcoord)
 
         self.electrons = new_electrons
