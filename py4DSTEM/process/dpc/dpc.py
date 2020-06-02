@@ -289,12 +289,10 @@ def get_phase_from_CoM(CoMx, CoMy, theta, flip, regLowPass=0.5, regHighPass=100,
         CoMy_rot = CoMx*np.sin(theta) - CoMy*np.cos(theta)
 
     # Initializations
-    phase = np.zeros((R_Nx_padded,R_Ny_padded))
-    update = np.zeros((R_Nx_padded,R_Ny_padded))
-    dx = np.zeros((R_Nx_padded,R_Ny_padded))
-    dy = np.zeros((R_Nx_padded,R_Ny_padded))
+    s = (R_Nx_padded,R_Ny_padded)
+    phase,update,dx,dy = [np.zeros(s) for i in range(4)]
     error = np.zeros(n_iter)
-    mask = np.zeros((R_Nx_padded,R_Ny_padded),dtype=bool)
+    mask = np.zeros(s,dtype=bool)
     mask[:R_Nx,:R_Ny] = True
     maskInv = mask==False
     if phase_init is not None:
@@ -310,7 +308,7 @@ def get_phase_from_CoM(CoMx, CoMy, theta, flip, regLowPass=0.5, regHighPass=100,
         dy[maskInv] = 0
 
         # Calculate reconstruction update
-        update = np.fft.irfft2( np.fft.rfft2(dx)*qxOperator + np.fft.rfft2(dy)*qyOperator)
+        update = np.fft.irfft2( np.fft.rfft2(dx,s=s)*qxOperator + np.fft.rfft2(dy,s=s)*qyOperator,s=s)
 
         # Apply update
         phase += stepsize*update
@@ -326,7 +324,7 @@ def get_phase_from_CoM(CoMx, CoMy, theta, flip, regLowPass=0.5, regHighPass=100,
 
         # Halve step size if error is increasing
         if i>0:
-            if error[i] < error[i-1]:
+            if error[i] > error[i-1]:
                 stepsize /= 2
 
     phase = phase[:R_Nx,:R_Ny]
