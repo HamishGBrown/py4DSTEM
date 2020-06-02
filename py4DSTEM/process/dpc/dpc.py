@@ -263,7 +263,7 @@ def get_phase_from_CoM(CoMx, CoMy, theta, flip, regLowPass=0.5, regHighPass=100,
     assert isinstance(n_iter,(int,np.integer))
 
     # Coordinates
-    R_Nx,R_Ny = CoMx.shape
+    R_Nx,R_Ny = CoMx.shape[-2:]
     R_Nx_padded,R_Ny_padded = R_Nx*paddingfactor,R_Ny*paddingfactor
     
     qx = np.fft.fftfreq(R_Nx_padded)
@@ -289,7 +289,7 @@ def get_phase_from_CoM(CoMx, CoMy, theta, flip, regLowPass=0.5, regHighPass=100,
         CoMy_rot = CoMx*np.sin(theta) - CoMy*np.cos(theta)
 
     # Initializations
-    s = (R_Nx_padded,R_Ny_padded)
+    s = (*CoMx.shape[:-2],R_Nx_padded,R_Ny_padded)
     phase,update,dx,dy = [np.zeros(s) for i in range(4)]
     error = np.zeros(n_iter)
     mask = np.zeros(s,dtype=bool)
@@ -308,7 +308,7 @@ def get_phase_from_CoM(CoMx, CoMy, theta, flip, regLowPass=0.5, regHighPass=100,
         dy[maskInv] = 0
 
         # Calculate reconstruction update
-        update = np.fft.irfft2( np.fft.rfft2(dx,s=s)*qxOperator + np.fft.rfft2(dy,s=s)*qyOperator,s=s)
+        update = np.fft.irfft2( np.fft.rfft2(dx,s=s[-2:])*qxOperator + np.fft.rfft2(dy,s=s[-2:])*qyOperator,s=s[-2:])
 
         # Apply update
         phase += stepsize*update
